@@ -15,6 +15,14 @@ import java.util.Map.Entry;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
+import limelight.Limelight;
+import limelight.networktables.AngularVelocity3d;
+import limelight.networktables.LimelightPoseEstimator;
+import limelight.networktables.LimelightPoseEstimator.EstimationMode;
+import limelight.networktables.LimelightResults;
+import limelight.networktables.Orientation3d;
+import limelight.networktables.PoseEstimate;
+
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
@@ -46,8 +54,9 @@ public class ShootKickIndexCommand extends Command {
 
     private final List<RecordedShot> shots = List.of(
         // TUNE HERE
+        new RecordedShot(Meters.of(1), RPM.of(4000), Second.of(1)),
         new RecordedShot(Meters.of(1), RPM.of(4000), Second.of(1))
-        
+
     );
     private final InterpolatingDoubleTreeMap calculatedGoalRPM = new InterpolatingDoubleTreeMap();
     private final InterpolatingDoubleTreeMap calculatedTOF = new InterpolatingDoubleTreeMap();

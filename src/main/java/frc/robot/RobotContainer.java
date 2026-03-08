@@ -122,7 +122,6 @@ private final Trigger leftTriggerDeadband =
 
 
     //Set up auto commands
-     NamedCommands.registerCommand("AlignToTarget", m_auto.alignCommand);
      NamedCommands.registerCommand("SHOOT", new ShootKickIndexCommand(
         Shooter,
         Kicker,
@@ -201,7 +200,7 @@ leftTriggerDeadband.toggleOnFalse(Intake.setAngle(Degrees.of(0)));
 //driverXbox.x().onTrue(ShakeIntake.shake(Intake));
 
     
-leftTriggerDeadband.whileTrue(IntakeSpin.runIntakeCommand(1))  //RUN INTAKE
+leftTriggerDeadband.whileTrue(IntakeSpin.runIntakeCommand(0.7))  //RUN INTAKE
 .onFalse(IntakeSpin.stopIntakeCommand());
   
 //SHOOTER KICKER INDEXER CONTROLS

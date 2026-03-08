@@ -7,6 +7,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Meter;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -16,7 +17,9 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.Trajectory;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -24,6 +27,15 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
 import frc.robot.LimelightHelpers;
+import limelight.Limelight;
+import limelight.networktables.AngularVelocity3d;
+import limelight.networktables.LimelightPoseEstimator;
+import static edu.wpi.first.units.Units.Degree;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.DegreesPerSecond;
+
+import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.Second;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Set;
@@ -40,7 +52,18 @@ import swervelib.SwerveDrive;
 import swervelib.parser.SwerveParser;
 import swervelib.telemetry.SwerveDriveTelemetry;
 import swervelib.telemetry.SwerveDriveTelemetry.TelemetryVerbosity;
+import limelight.networktables.LimelightPoseEstimator.EstimationMode;
+import limelight.networktables.Orientation3d;
 
+
+import limelight.networktables.LimelightResults;
+
+import limelight.networktables.PoseEstimate;
+
+import java.util.List;
+import java.util.Optional;
+
+import frc.robot.systems.field.FieldConstants.AprilTagLayoutType;
 
 public class SwerveSubsystem extends SubsystemBase
 {
@@ -66,6 +89,10 @@ public class SwerveSubsystem extends SubsystemBase
                                                             Rotation2d.fromDegrees(180));
                                                             
   private static final Set<Integer> ALLOWED_TAG_IDS = Set.of(9, 10, 25, 26);
+
+   Limelight limelight;
+  LimelightPoseEstimator limelightPoseEstimator;
+
   /**
    * Initialize {@link SwerveDrive} with the directory provided.
    *
@@ -103,7 +130,27 @@ catch (Exception e) {
     baseStream = SwerveInputStream.of(swerveDrive, getTranslationX, getTranslationY)
         .allianceRelativeControl(true)
         .deadband(0.12);
+
+        setupLimelight();
 }
+
+ public void setupLimelight() {
+     swerveDrive.stopOdometryThread();
+     limelight = new Limelight("raider");
+     limelight
+     .getSettings()
+     .withPipelineIndex(0)
+     .withCameraOffset(
+     new Pose3d(
+     Units.inchesToMeters(13),
+     Units.inchesToMeters(13.5),
+     Units.inchesToMeters(22.5),
+     new Rotation3d(0, 0, Units.degreesToRadians(30))))
+     .withAprilTagIdFilter(List.of(17, 18, 19, 20, 21, 22, 6, 7, 8, 9, 10, 11))
+     .save();
+     limelightPoseEstimator =
+     limelight.createPoseEstimator(EstimationMode.MEGATAG2);
+  }
 
 public SwerveInputStream buildDefaultStream() {
     return baseStream.copy()
@@ -141,6 +188,7 @@ public SwerveInputStream buildRelativeTurningStream() {
 
         // ShooterSubsystemConstants.midRange is in meters (use directly)
         double desiredDistanceMeters = 2.8;
+     
 
         // factor = d / ||v||
         double factor = desiredDistanceMeters / dist;
@@ -282,10 +330,75 @@ public SwerveInputStream buildRelativeTurningStream() {
     });
 }
 
+  private int outofAreaReading = 0;
+  private boolean initialReading = false;
+  private double lastLLTimestamp = 0;
   @Override
   public void periodic()
   {
- 
+    swerveDrive.updateOdometry();
+ limelight
+    .getSettings()
+    .withRobotOrientation(
+    new Orientation3d(
+    new Rotation3d(swerveDrive.getOdometryHeading().rotateBy(Rotation2d.kZero)),
+    new AngularVelocity3d(
+    DegreesPerSecond.of(0), DegreesPerSecond.of(0), DegreesPerSecond.of(0))))
+    .save();
+    Optional<PoseEstimate> poseEstimates =
+    limelightPoseEstimator.getPoseEstimate();
+    Optional<LimelightResults> results = limelight.getLatestResults();
+    if (results.isPresent() /* && poseEstimates.isPresent()*/) {
+    LimelightResults result = results.get();
+    PoseEstimate poseEstimate = poseEstimates.get();
+    SmartDashboard.putNumber("limelight/Avg Tag Ambiguity",
+    poseEstimate.getAvgTagAmbiguity());
+    SmartDashboard.putNumber("limelight/Min Tag Ambiguity",
+    poseEstimate.getMinTagAmbiguity());
+    SmartDashboard.putNumber("limelight/Max Tag Ambiguity",
+    poseEstimate.getMaxTagAmbiguity());
+    SmartDashboard.putNumber("limelight/Avg Distance", poseEstimate.avgTagDist);
+    SmartDashboard.putNumber("limelight/Avg Tag Area", poseEstimate.avgTagArea);
+    SmartDashboard.putNumber("limelight/Odom/Pose/x", swerveDrive.getPose().getX());
+    SmartDashboard.putNumber("limelight/Odom/Pose/y", swerveDrive.getPose().getY());
+    SmartDashboard.putNumber(
+     "limlelight/Odom/Pose/degrees", swerveDrive.getPose().getRotation().getDegrees());
+     SmartDashboard.putNumber("limelight/Pose/x", poseEstimate.pose.getX());
+     SmartDashboard.putNumber("limelight/Pose/y", poseEstimate.pose.getY());
+     SmartDashboard.putNumber(
+     "limelight/Pose/degrees",
+     poseEstimate.pose.toPose2d().getRotation().getDegrees());
+     if (result.valid) {
+      Pose2d estimatorPose = poseEstimate.pose.toPose2d();
+     Pose2d usefulPose = result.getBotPose2d(Alliance.Blue);
+     double distanceToPose =
+     usefulPose.getTranslation().getDistance(swerveDrive.getPose().getTranslation());
+     if (distanceToPose < 0.5
+     || (outofAreaReading > 10)
+     || (outofAreaReading > 10 && !initialReading)) {
+     if (!initialReading) {
+     initialReading = true;
+     }
+     outofAreaReading = 0;
+     System.out.println(usefulPose.toString());
+     System.out.println(result.timestamp_LIMELIGHT_publish);
+     System.out.println(result.timestamp_RIOFPGA_capture);
+     if(lastLLTimestamp != result.timestamp_RIOFPGA_capture)
+     {
+      var stdDevScale = Math.pow(result.botpose_avgdist, 2.0)/result.botpose_tagcount;
+     // stdDevScale = distance^2/tagsInView
+     swerveDrive.setVisionMeasurementStdDevs(VecBuilder.fill(0.05*stdDevScale, 0.05*stdDevScale, 0.022*stdDevScale));
+      swerveDrive.addVisionMeasurement(usefulPose,
+      result.timestamp_RIOFPGA_capture);
+      lastLLTimestamp = result.timestamp_RIOFPGA_capture;
+     }
+     } else {
+     outofAreaReading += 1;
+     }
+      swerveDrive.addVisionMeasurement(estimatorPose,
+     poseEstimate.timestampSeconds);
+     }
+     }
   }
 
   @Override
@@ -296,6 +409,7 @@ public SwerveInputStream buildRelativeTurningStream() {
 
 
     public void setupPathPlanner()
+    
   {
     // Load the RobotConfig from the GUI settings. You should probably
     // store this in your Constants file
