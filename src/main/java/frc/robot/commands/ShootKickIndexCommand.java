@@ -128,11 +128,11 @@ public class ShootKickIndexCommand extends Command {
         );
 
         if (shooterReady) {
-            kicker.runKicker(-0.75);
+            kicker.setTargetRPM(Constants.KickerConstants.KickerGoalRPM);
             indexer.runIndexer(Constants.IndexConstants.IndexSpeed);
         } 
         else {
-            kicker.runKicker(0.75);
+            kicker.setTargetRPM(Constants.KickerConstants.KickerGoalRPM);
             indexer.stopIndexer();
         }
     }
@@ -140,7 +140,7 @@ public class ShootKickIndexCommand extends Command {
     @Override
     public void end(boolean interrupted) {
         shooter.stop();
-        kicker.stopKicker();
+        kicker.setDutyCycle(0);
         indexer.stopIndexer();
     }
 
