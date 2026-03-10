@@ -7,7 +7,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Practice Spin"
+            "pathName": "MoveCenter"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "NEARSHOOT"
           }
         }
       ]

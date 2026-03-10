@@ -9,6 +9,7 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.FeetPerSecond;
 
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
@@ -29,12 +30,16 @@ import frc.robot.subsystems.IntakeSpinSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.KickerSubsystem;
 import frc.robot.subsystems.CameraSubsystem;
+import frc.robot.systems.field.FieldConstants;
 //import frc.robot.subsystems.ClimberSubsystem;
 import frc.robot.subsystems.ShooterSubsystem;
 import java.io.File;
+import java.util.stream.BaseStream;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-
+import com.reduxrobotics.sensors.canandcolor.DigoutChannel.Index;
+import frc.robot.commands.AutoAimCommand;
 import swervelib.SwerveInputStream;
 
 
@@ -81,6 +86,19 @@ private final Trigger leftTriggerDeadband =
     Indexer.setDefaultCommand(Indexer.stopIndexerCommand());
     Kicker.setDefaultCommand(Kicker.stopKickerCommand());
      }
+
+         Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(drivebase.copy()
+            // Fallback
+            .aim(FieldConstants.Hub.getHubPose())
+            .aimHeadingOffset(Rotation2d.k180deg)
+            .aimWhile(driverXbox.rightBumper()));
+
+    Command autoSwerveInputStream = drivebase.driveFieldOriented(drivebase.copy()
+            // Fallback
+            .aim(FieldConstants.Hub.getHubPose())
+            .aimHeadingOffset(Rotation2d.k180deg)
+            .aimWhile(() -> true));
+
   SwerveInputStream driveRobotOriented = SwerveInputStream.of(drivebase.getSwerveDrive(),
                                                               () -> driverXbox.getLeftY() * 0.7,
                                                               () -> driverXbox.getLeftX() * 0.7)
@@ -122,17 +140,15 @@ private final Trigger leftTriggerDeadband =
 
 
     //Set up auto commands
-     NamedCommands.registerCommand("SHOOT", new ShootKickIndexCommand(
-        Shooter,
-        Kicker,
-        Indexer,
-        Constants.ShooterConstants.FARShooterGoalRPM
-    ).withTimeout(3));
+    NamedCommands.registerCommand("FARSHOOT", new ShootKickIndexCommand(Shooter,Kicker,Indexer,Constants.ShooterConstants.FARShooterGoalRPM).withTimeout(8));
+    NamedCommands.registerCommand("NEARSHOOT", new ShootKickIndexCommand(Shooter,Kicker,Indexer,Constants.ShooterConstants.NEARShooterGoalRPM).withTimeout(12));
+    //NamedCommands.registerCommand("INDEX", Indexer.runIndexerCommand(-0.6).withTimeout(12));
+    NamedCommands.registerCommand("INTAKEDOWN",Intake.setAngle(Degrees.of(145)));
+    NamedCommands.registerCommand("INTAKEUP",Intake.setAngle(Degrees.of(0)));
+    NamedCommands.registerCommand("INTAKE",IntakeSpin.runIntakeCommand(0.7).withTimeout(8));
+    NamedCommands.registerCommand("SHAKE",ShakeIntake.shake(Intake));
+    NamedCommands.registerCommand("ShootIndexKick",new ShootKickIndexCommand(Shooter, Kicker, Indexer, 4000).withTimeout(10));
 
-    NamedCommands.registerCommand(
-    "SHAKE",
-    ShakeIntake.shake(Intake)
-);
 
     drivebase.setupPathPlanner();
 
@@ -173,10 +189,7 @@ private final Trigger leftTriggerDeadband =
    
 
 
-     driverXbox.leftBumper().and(drivebase::isOnOurSide).whileTrue(
-      Commands.parallel(
-        drivebase.driveWithChassisSpeedsSupplier(drivebase.buildDriveToCurveStream())
-      ));
+   
       // .onTrue(Commands.runOnce(() -> drivebase.setDriveToPoseActive(true)))
       // .onFalse(Commands.runOnce(() -> drivebase.setDriveToPoseActive(false)));
 
@@ -200,12 +213,12 @@ leftTriggerDeadband.toggleOnFalse(Intake.setAngle(Degrees.of(0)));
 //driverXbox.x().onTrue(ShakeIntake.shake(Intake));
 
     
-leftTriggerDeadband.whileTrue(IntakeSpin.runIntakeCommand(0.7))  //RUN INTAKE
+leftTriggerDeadband.whileTrue(IntakeSpin.runIntakeCommand(0.65))  //RUN INTAKE
 .onFalse(IntakeSpin.stopIntakeCommand());
-  
+  driverXbox.rightBumper().whileTrue(new AutoAimCommand(drivebase));
 //SHOOTER KICKER INDEXER CONTROLS
-    driverXbox.rightTrigger(0.2).whileTrue(new ShootKickIndexCommand(Shooter, Kicker, Indexer, drivebase));
-driverXbox.rightBumper().whileTrue(new ShootKickIndexCommand(Shooter, Kicker, Indexer,Constants.ShooterConstants.FARShooterGoalRPM));
+    //driverXbox.rightTrigger(0.2).whileTrue(new ShootKickIndexCommand(Shooter, Kicker, Indexer, drivebase));
+driverXbox.rightTrigger(0.2).whileTrue(new ShootKickIndexCommand(Shooter, Kicker, Indexer,Constants.ShooterConstants.FARShooterGoalRPM));
 driverXbox.b().whileTrue(new ShootKickIndexCommand(Shooter, Kicker, Indexer,Constants.ShooterConstants.NEARShooterGoalRPM));
 
 //driverXbox.pov(270).whileTrue(Climber.armCmd(-1));
@@ -224,7 +237,7 @@ driverXbox.b().whileTrue(new ShootKickIndexCommand(Shooter, Kicker, Indexer,Cons
   {
     // Pass in the selected auto from the SmartDashboard as our desired autnomous commmand 
     //return autoChooser.getSelected();
-    return drivebase.getAutonomousCommand("CenterShootAndClimb");
+    return drivebase.getAutonomousCommand("CenterShoot");
   }
 
 }

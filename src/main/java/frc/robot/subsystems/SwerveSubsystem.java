@@ -62,14 +62,14 @@ import limelight.networktables.PoseEstimate;
 import java.util.List;
 import java.util.Optional;
 
-import frc.robot.systems.field.FieldConstants.AprilTagLayoutType;
+
 
 public class SwerveSubsystem extends SubsystemBase
 {
   /**
    * Swerve drive object.
    */
-  private final SwerveInputStream baseStream;
+  public SwerveInputStream baseStream;
   SwerveDrivePoseEstimator SwerveDrivePoseEstimator;
   SwerveDrivePoseEstimator buildDriveToCurveStream;
   private final SwerveDrive swerveDrive;
@@ -135,7 +135,7 @@ catch (Exception e) {
 
  public void setupLimelight() {
      swerveDrive.stopOdometryThread();
-     limelight = new Limelight("raider");
+     limelight = new Limelight("limelight");
      limelight
      .getSettings()
      .withPipelineIndex(0)
@@ -145,7 +145,7 @@ catch (Exception e) {
      Units.inchesToMeters(13.5),
      Units.inchesToMeters(22.5),
      new Rotation3d(0, 0, Units.degreesToRadians(30))))
-     .withAprilTagIdFilter(List.of(17, 18, 19, 20, 21, 22, 6, 7, 8, 9, 10, 11))
+     .withAprilTagIdFilter(List.of(25, 26, 19, 10, 18, 27, 21, 24, 5, 8, 2, 11))
      .save();
      limelightPoseEstimator =
      limelight.createPoseEstimator(EstimationMode.MEGATAG2);
@@ -341,13 +341,14 @@ public SwerveInputStream buildRelativeTurningStream() {
     .withRobotOrientation(
     new Orientation3d(
     new Rotation3d(swerveDrive.getOdometryHeading().rotateBy(Rotation2d.kZero)),
-    new AngularVelocity3d(
-    DegreesPerSecond.of(0), DegreesPerSecond.of(0), DegreesPerSecond.of(0))))
+    new AngularVelocity3d(DegreesPerSecond.of(0), DegreesPerSecond.of(0), DegreesPerSecond.of(0))))
     .save();
+  
     Optional<PoseEstimate> poseEstimates =
     limelightPoseEstimator.getPoseEstimate();
     Optional<LimelightResults> results = limelight.getLatestResults();
     if (results.isPresent() /* && poseEstimates.isPresent()*/) {
+
     LimelightResults result = results.get();
     PoseEstimate poseEstimate = poseEstimates.get();
     SmartDashboard.putNumber("limelight/Avg Tag Ambiguity",
@@ -610,147 +611,9 @@ public SwerveInputStream buildRelativeTurningStream() {
     return swerveDrive;
   }
 
-/* 
-public Command driveToLimelightTarget() {
-
-    final double desiredDistanceMeters = 10.0;
-
-    final double kPForward = 0.4;
-    final double kDForward = 0.2;
-
-    final double kPRot = 0.15;
-    final double kDRot = 0.0;
-
-    final double maxSearchSpeed = 1.0;
-
-    final double distanceTolerance = 0.2;
-    final double xTolerance = 0.03;
-
-    final double stableTimeSeconds = 0.25;
-
-    final double[] lastX = {0.0};
-    final double[] prevDistanceError = {0.0};
-    final double[] prevXError = {0.0};
-    final double[] timeAtSetpoint = {0.0};
-
-    return runOnce(() ->
-        LimelightHelpers.setPipelineIndex("limelight-raider", 0)
-    ).andThen(
-        run(() -> {
-
-            boolean targetVisible =
-                LimelightHelpers.getTV("limelight-raider");
-
-            int tagID = (int) LimelightHelpers.getFiducialID("limelight-raider");
-
-            // ---------- FILTER BY ALLOWED TAGS ----------
-            if (!targetVisible || !ALLOWED_TAG_IDS.contains(tagID)) {
-                double rotSpeed = Math.signum(lastX[0]) * maxSearchSpeed;
-
-                swerveDrive.drive(
-                    new Translation2d(0, 0),
-                    rotSpeed,
-                    false,
-                    false
-                );
-                return;
-            }
-
-          
-                );
-
-            double x = pose[0];
-            double z = pose[2];
-
-            lastX[0] = x;
-
-            double distanceError = desiredDistanceMeters - z;
-            double xError = x;
-
-            double distanceDerivative =
-                distanceError - prevDistanceError[0];
-            double xDerivative =
-                xError - prevXError[0];
-
-            prevDistanceError[0] = distanceError;
-            prevXError[0] = xError;
-
-            boolean atSetpoint =
-                Math.abs(distanceError) < distanceTolerance
-                && Math.abs(xError) < xTolerance;
-
-            if (atSetpoint) {
-                timeAtSetpoint[0] += 0.02; // ~20ms loop
-
-                swerveDrive.drive(
-                    new Translation2d(0, 0),
-                    0,
-                    false,
-                    false
-                );
-                return;
-            } else {
-                timeAtSetpoint[0] = 0;
-            }
-
-            double forwardSpeed =
-                (distanceError * kPForward)
-                + (distanceDerivative * kDForward);
-
-            double rotSpeed =
-                (-xError * kPRot)
-                - (xDerivative * kDRot);
-
-            if (Math.abs(forwardSpeed) < 0.05) forwardSpeed = 0;
-            if (Math.abs(rotSpeed) < 0.05) rotSpeed = 0;
-
-            forwardSpeed =
-                MathUtil.clamp(forwardSpeed, -1.0, 1.0);
-            rotSpeed =
-                MathUtil.clamp(rotSpeed, -1.0, 1.0);
-
-            swerveDrive.drive(
-                new Translation2d(forwardSpeed * 1.5, 0),
-                rotSpeed,
-                false,
-                false
-            );
-        })
-        .until(() -> timeAtSetpoint[0] >= stableTimeSeconds)
-    )
-    .finallyDo(() ->
-        swerveDrive.drive(
-            new Translation2d(0, 0),
-            0,
-            false,
-            false
-        )
-    );
-}
-*/
 
 
-public boolean isOnOurSide() {
-        // Use hub X positions as the boundary. The field is effectively split in thirds
-        // for our purposes: if we're Blue, we're 'on our side' when our X is less than
-        // the Blue hub's X; if Red, when our X is greater than the Red hub's X.
-        Pose2d pose = getPose();
-        double x = pose.getX();
 
-        // Use safe Dashboard.getAlliance() which will always return a value (with a sensible default)
-        DriverStation.Alliance alliance = Dashboard.getAlliance();
-        if (alliance == DriverStation.Alliance.Blue) {
-            return x < Constants.FieldConstants.BLUE_HUB_POSITION.getX();
-        } else {
-            return x > Constants.FieldConstants.RED_HUB_POSITION.getX();
-        }
-    }
-
-public Command driveToHubCurveCommand() {
-    return driveFieldOriented(
-        () -> buildDriveToCurveStream().get()
-    );
-}
 
 /**
  * Get the distance to the hub in meters
