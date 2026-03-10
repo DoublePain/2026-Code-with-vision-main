@@ -105,12 +105,12 @@ public class IntakeSubsystem  extends SubsystemBase {
   
    public Command DeployIntake(Angle angle)
   {
-    return intakeArm.setAngle(Degrees.of(180));  //DONT KNOW IF 25 IS RIGHT YET
+    return intakeArm.setAngle(Degrees.of(0));  //DONT KNOW IF 25 IS RIGHT YET
   }
 
    public Command StowIntake(Angle angle)
   {
-    return intakeArm.setAngle(Degrees.of(270));  //DONT KNOW IF 115 IS RIGHT YET
+    return intakeArm.setAngle(Degrees.of(145));  //DONT KNOW IF 115 IS RIGHT YET
   }
 
 

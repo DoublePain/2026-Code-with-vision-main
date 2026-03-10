@@ -5,34 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "deadline",
+          "type": "parallel",
           "data": {
             "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "OverDaBump"
+                }
+              },
               {
                 "type": "named",
                 "data": {
                   "name": "INTAKEDOWN"
                 }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "INTAKE"
-                }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "MoveToInitial"
-                }
               }
             ]
-          }
-        },
-        {
-          "type": "sequential",
-          "data": {
-            "commands": []
           }
         }
       ]

@@ -347,8 +347,7 @@ public SwerveInputStream buildRelativeTurningStream() {
     Optional<PoseEstimate> poseEstimates =
     limelightPoseEstimator.getPoseEstimate();
     Optional<LimelightResults> results = limelight.getLatestResults();
-    if (results.isPresent() /* && poseEstimates.isPresent()*/) {
-
+    if (results.isPresent()  && poseEstimates.isPresent()) {
     LimelightResults result = results.get();
     PoseEstimate poseEstimate = poseEstimates.get();
     SmartDashboard.putNumber("limelight/Avg Tag Ambiguity",

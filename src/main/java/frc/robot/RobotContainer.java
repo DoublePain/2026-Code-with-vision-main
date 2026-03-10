@@ -7,6 +7,7 @@ package frc.robot;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.FeetPerSecond;
+import static edu.wpi.first.units.Units.RPM;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -21,7 +22,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.Autonomous.Auto;
-import frc.robot.commands.DeployAndSpinIntake;
 import frc.robot.commands.ShakeIntake;
 import frc.robot.commands.ShootKickIndexCommand;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -40,6 +40,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import com.reduxrobotics.sensors.canandcolor.DigoutChannel.Index;
 import frc.robot.commands.AutoAimCommand;
+
+import swervelib.SwerveDrive;
 import swervelib.SwerveInputStream;
 
 
@@ -84,7 +86,7 @@ private final Trigger leftTriggerDeadband =
     IntakeSpin.setDefaultCommand(IntakeSpin.stopIntakeCommand());
     Shooter.setDefaultCommand(Shooter.setDutyCycle(0));
     Indexer.setDefaultCommand(Indexer.stopIndexerCommand());
-    Kicker.setDefaultCommand(Kicker.stopKickerCommand());
+    Kicker.setDefaultCommand(Kicker.setDutyCycle(0));
      }
 
          Command driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(drivebase.copy()
@@ -140,23 +142,18 @@ private final Trigger leftTriggerDeadband =
 
 
     //Set up auto commands
-    NamedCommands.registerCommand("FARSHOOT", new ShootKickIndexCommand(Shooter,Kicker,Indexer,Constants.ShooterConstants.FARShooterGoalRPM).withTimeout(8));
-    NamedCommands.registerCommand("NEARSHOOT", new ShootKickIndexCommand(Shooter,Kicker,Indexer,Constants.ShooterConstants.NEARShooterGoalRPM).withTimeout(12));
-    //NamedCommands.registerCommand("INDEX", Indexer.runIndexerCommand(-0.6).withTimeout(12));
+
     NamedCommands.registerCommand("INTAKEDOWN",Intake.setAngle(Degrees.of(145)));
     NamedCommands.registerCommand("INTAKEUP",Intake.setAngle(Degrees.of(0)));
     NamedCommands.registerCommand("INTAKE",IntakeSpin.runIntakeCommand(0.7).withTimeout(8));
     NamedCommands.registerCommand("SHAKE",ShakeIntake.shake(Intake));
     NamedCommands.registerCommand("ShootIndexKick",new ShootKickIndexCommand(Shooter, Kicker, Indexer, 4000).withTimeout(10));
-
-
     drivebase.setupPathPlanner();
 
     //Set the default auto (do nothing) 
     autoChooser.setDefaultOption("Do Nothing", Commands.none());
     autoChooser.addOption("Straight",AutoBuilder.buildAuto("Straight Auto"));
     autoChooser.addOption("ShootClimbCenter",AutoBuilder.buildAuto("CenterShootAndClimb"));
-    //Add a simple auto option to have the robot drive forward for 1 second then stop
     autoChooser.addOption("Drive Forward", drivebase.driveForward().withTimeout(1));
     //Put the autoChooser on the SmartDashboard
     SmartDashboard.putData("Auto Chooser", autoChooser);
