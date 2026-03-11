@@ -156,7 +156,7 @@ public class SwerveSubsystem extends SubsystemBase
   {
     return baseStream
         .copy()
-        .withControllerRotationAxis(() -> -driverController.getRightX());
+        .withControllerRotationAxis(() -> -driverController.getRightX() * 0.7 ).scaleTranslation(0.7);
   }
 
   public void setDriveToPoseActive(boolean active) {this.driveToPoseActive = active;}
