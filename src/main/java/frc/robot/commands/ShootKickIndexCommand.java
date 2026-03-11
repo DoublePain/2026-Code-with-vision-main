@@ -97,7 +97,8 @@ public class ShootKickIndexCommand extends Command
     double goalRPM1 = goalRPM;
     if (swerve.isPresent())
     {
-      goalRPM1 = swerve.get().distanceToHub();
+      double distance = swerve.get().distanceToHub();
+      goalRPM1 = calculatedGoalRPM.get(distance);
     }
 
     shooter.setTargetRPM(goalRPM1);
