@@ -107,6 +107,10 @@ public class RobotContainer
     NamedCommands.registerCommand("INTAKE", IntakeSpin.runIntakeCommand(1).withTimeout(5));
     NamedCommands.registerCommand("NEARSHOOT", new ShootKickIndexCommand(Shooter, Kicker, Indexer, 3450).withTimeout(12));
     NamedCommands.registerCommand("FARSHOOT", new ShootKickIndexCommand(Shooter, Kicker, Indexer, 3800).withTimeout(10));
+    NamedCommands.registerCommand("AUTOAIM",new AutoAimCommand(drivebase));
+     NamedCommands.registerCommand("AUTOSHOOT",new ShootKickIndexCommand(Shooter, Kicker, Indexer,drivebase).withTimeout(12));
+
+     
      
 
     NamedCommands.registerCommand("SHAKE", ShakeIntake.shake(Intake));
