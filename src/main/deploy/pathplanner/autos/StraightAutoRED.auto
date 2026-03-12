@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "GOBACK"
+            "pathName": "GoBackRED"
           }
         },
         {
@@ -20,6 +20,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "RED",
   "choreoAuto": false
 }

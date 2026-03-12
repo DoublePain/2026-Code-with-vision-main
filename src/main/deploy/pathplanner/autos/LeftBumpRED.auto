@@ -7,7 +7,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "LeftBumpBLUE"
+            "pathName": "LeftBumpRED"
           }
         },
         {
@@ -20,6 +20,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "BLUE",
+  "folder": "RED",
   "choreoAuto": false
 }
