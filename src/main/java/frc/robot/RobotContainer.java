@@ -62,7 +62,7 @@ public class RobotContainer
                                                                 4) * -1)
                                                             .deadband(OperatorConstants.DEADBAND)
                                                             .scaleTranslation(0.8)
-                                                            .allianceRelativeControl(true);
+                                                            .allianceRelativeControl(false);
   SwerveInputStream driveDirectAngle = driveAngularVelocity.copy().withControllerHeadingAxis(driverXbox::getRightX,
                                                                                              driverXbox::getRightY)
                                                            .headingWhile(true);
@@ -102,13 +102,15 @@ public class RobotContainer
 
     //Set up auto commands
 
-    NamedCommands.registerCommand("INTAKEDOWN", Intake.setAngle(Degrees.of(120)).withTimeout(5));
+    NamedCommands.registerCommand("INTAKEDOWN", Intake.setAngle(Degrees.of(135)).withTimeout(5));
     NamedCommands.registerCommand("INTAKEUP", Intake.setAngle(Degrees.of(0)));
     NamedCommands.registerCommand("INTAKE", IntakeSpin.runIntakeCommand(1).withTimeout(5));
+    NamedCommands.registerCommand("NOSHOOT", new ShootKickIndexCommand(Shooter, Kicker, Indexer, 0).withTimeout(2));
+    NamedCommands.registerCommand("STOPINTAKE", IntakeSpin.runIntakeCommand(0));
     NamedCommands.registerCommand("NEARSHOOT", new ShootKickIndexCommand(Shooter, Kicker, Indexer, 3450).withTimeout(12));
-    NamedCommands.registerCommand("FARSHOOT", new ShootKickIndexCommand(Shooter, Kicker, Indexer, 3800).withTimeout(10));
+    NamedCommands.registerCommand("FARSHOOT", new ShootKickIndexCommand(Shooter, Kicker, Indexer, 3900).withTimeout(12));
     NamedCommands.registerCommand("AUTOAIM",new AutoAimCommand(drivebase));
-     NamedCommands.registerCommand("AUTOSHOOT",new ShootKickIndexCommand(Shooter, Kicker, Indexer,drivebase).withTimeout(12));
+    NamedCommands.registerCommand("AUTOSHOOT",new ShootKickIndexCommand(Shooter, Kicker, Indexer,drivebase).withTimeout(12));
 
      
      
@@ -164,16 +166,17 @@ public class RobotContainer
 
     // INTAKE CONTROLS
 
-    leftTriggerDeadband.toggleOnTrue(Intake.setAngle(Degrees.of(120)));
+    leftTriggerDeadband.toggleOnTrue(Intake.setAngle(Degrees.of(135)));
     leftTriggerDeadband.toggleOnFalse(Intake.setAngle(Degrees.of(0)));
 
-//driverXbox.a().whileTrue( Intake.armCmd(0.5));  //DUTY CYCLE JUST INCASE SETPOINTS MESS UP
-//driverXbox.a().whileFalse( Intake.armCmd(0));
-//driverXbox.y().whileTrue( Intake.armCmd(-0.5));
-//driverXbox.y().whileFalse( Intake.armCmd(0));
 
 //driverXbox.x().onTrue(ShakeIntake.shake(Intake));
-
+driverXbox.y().whileTrue(Intake.armCmd(-0.2));
+driverXbox.a().whileTrue(Intake.armCmd(0.2));
+driverXbox.y().whileFalse(Intake.armCmd(0));
+driverXbox.a().whileFalse(Intake.armCmd(0));
+driverXbox.leftBumper().whileTrue(IntakeSpin.runIntakeCommand(1));
+driverXbox.leftBumper().whileFalse(IntakeSpin.runIntakeCommand(0));
     leftTriggerDeadband.whileTrue(IntakeSpin.runIntakeCommand(1))  //RUN INTAKE
     .onFalse(IntakeSpin.stopIntakeCommand());
     driverXbox.rightBumper().whileTrue(new AutoAimCommand(drivebase));
@@ -206,7 +209,7 @@ public class RobotContainer
   {
     // Pass in the selected auto from the SmartDashboard as our desired autnomous commmand 
     //return autoChooser.getSelected();
-    return drivebase.getAutonomousCommand("Straight Auto");
+    return drivebase.getAutonomousCommand("DepotBLUE");
   }
 
 }

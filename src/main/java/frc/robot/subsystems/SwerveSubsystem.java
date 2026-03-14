@@ -33,6 +33,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import frc.robot.Constants;
+import frc.robot.systems.field.AllianceFlipUtil;
+
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
@@ -129,6 +131,8 @@ public class SwerveSubsystem extends SubsystemBase
   public void setupLimelight()
   {
     swerveDrive.stopOdometryThread();
+    SmartDashboard.putNumber("LLAmbiguity", 1.0);
+
     limelight = new Limelight("limelight");
     limelight
         .getSettings()
@@ -377,9 +381,14 @@ public class SwerveSubsystem extends SubsystemBase
       //     poseEstimate.pose.toPose2d().getRotation().getDegrees());
       if (result.valid)
       {
-        Pose2d estimatorPose = poseEstimate.pose.toPose2d();
-        Pose2d usefulPose    = result.getBotPose2d(Alliance.Blue);
-        if(poseEstimate.getAvgTagAmbiguity() > 0.5 && poseEstimate.tagCount > 1){
+        Pose2d estimatorPose = (poseEstimate.pose.toPose2d());
+        Pose2d usefulPose    = (result.getBotPose2d(Alliance.Blue));
+        double Ambiguity = poseEstimate.getAvgTagAmbiguity();
+        SmartDashboard.putNumber("LLAmbiguity", Ambiguity);
+        swerveDrive.field.getObject("LLPose").setPose(estimatorPose);
+        double AmbiguityMin = 0;
+        double AmbiguityMax = 0.22;
+        if( Ambiguity < AmbiguityMax && Ambiguity > AmbiguityMin  && poseEstimate.tagCount > 1){
           if (lastLLTimestamp != poseEstimate.timestampSeconds)
           {
             var stdDevScale = Math.pow(poseEstimate.avgTagDist, 2.0) / poseEstimate.tagCount;
@@ -452,11 +461,11 @@ public class SwerveSubsystem extends SubsystemBase
             // This will flip the path being followed to the red side of the field.
             // THE ORIGIN WILL REMAIN ON THE BLUE SIDE
 
-            var alliance = DriverStation.getAlliance();
-            if (alliance.isPresent())
-            {
-              return alliance.get() == DriverStation.Alliance.Red;
-            }
+            // var alliance = DriverStation.getAlliance();
+            // if (alliance.isPresent())
+            // {
+            //   return alliance.get() == DriverStation.Alliance.Red;
+            // }
             return false;
           },
           this

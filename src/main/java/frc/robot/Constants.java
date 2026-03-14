@@ -121,7 +121,7 @@ public final class Constants
   public static class IndexConstants
   {
 
-    public static final double IndexSpeed = -0.6;
+    public static final double IndexSpeed = -1;
 
   }
 
@@ -130,7 +130,7 @@ public final class Constants
 
     public static final double KickSpeed          = -0.5;
     public static final double KickerGoalRPM      = 1000;
-    public static final double KickerToleranceRPM = 1000;
+    public static final double KickerToleranceRPM = 1500;
   }
 
   public static class DriveConstants

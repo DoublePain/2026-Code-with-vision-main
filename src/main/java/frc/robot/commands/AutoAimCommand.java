@@ -27,7 +27,7 @@ public class AutoAimCommand extends Command
   @Override
   public void initialize()
   {
-    swerveInputStream.aim(AllianceFlipUtil.apply(new Pose2d(Hub.topCenterPoint.toTranslation2d(), Rotation2d.kZero)))
+    swerveInputStream.aim((new Pose2d(Hub.topCenterPoint.toTranslation2d(), Rotation2d.kZero)))
                      .aimWhile(true)
                      .aimHeadingOffset(Rotation2d.k180deg)
                      .scaleTranslation(0.5);

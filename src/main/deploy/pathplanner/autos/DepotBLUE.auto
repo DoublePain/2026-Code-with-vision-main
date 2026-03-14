@@ -5,25 +5,13 @@
     "data": {
       "commands": [
         {
-          "type": "parallel",
+          "type": "sequential",
           "data": {
             "commands": [
               {
                 "type": "path",
                 "data": {
                   "pathName": "GoToDepotBLUE"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "INTAKEDOWN"
-                }
-              },
-              {
-                "type": "named",
-                "data": {
-                  "name": "INTAKE"
                 }
               }
             ]
@@ -50,20 +38,46 @@
                 "data": {
                   "name": "INTAKE"
                 }
-              },
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "LeaveDepot"
-                }
               }
             ]
           }
         },
         {
-          "type": "named",
+          "type": "parallel",
           "data": {
-            "name": "AUTOSHOOT"
+            "commands": [
+              {
+                "type": "path",
+                "data": {
+                  "pathName": "LeaveDepot"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "INTAKEUP"
+                }
+              },
+              {
+                "type": "sequential",
+                "data": {
+                  "commands": [
+                    {
+                      "type": "wait",
+                      "data": {
+                        "waitTime": 1.5
+                      }
+                    },
+                    {
+                      "type": "named",
+                      "data": {
+                        "name": "FARSHOOT"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
           }
         }
       ]
